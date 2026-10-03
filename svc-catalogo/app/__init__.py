@@ -10,7 +10,7 @@ def create_app():
     app = Flask(__name__)
 
     # Configuração do banco de dados vinda do ambiente
-    database_url = os.getenv("DATABASE_URL", "sqlite:///catalogo.db")
+    database_url = os.getenv("DATABASE_URL", "sqlite:////app/data/catalogo.db")
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
