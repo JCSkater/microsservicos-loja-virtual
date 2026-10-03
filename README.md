@@ -8,7 +8,7 @@ O sistema simula o fluxo principal de uma loja virtual (Happy Path de compra), o
 
 ## 🏗️ Arquitetura do Sistema
 
-O projeto é dividido em microsserviços especializados e independentes, que se comunicam de forma sínbria (HTTP/REST) e assíncrona (Mensageria/Event-Driven):
+O projeto é dividido em microsserviços especializados e independentes, que se comunicam de forma síncrona (HTTP/REST) e assíncrona (Mensageria/Event-Driven):
 
 *   **Front-end**: Interface estática simples (HTML, CSS e JavaScript) para interação com o usuário.
 *   **API Gateway (Nginx)**: Ponto de entrada único que centraliza as requisições do Front-end e as redireciona para os microsserviços corretos.
