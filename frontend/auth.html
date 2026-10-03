@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identificação - Loja Virtual</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <main class="container-auth card">
+            <h2>🔑 Identificação do Cliente</h2>
+            <div class="abas">
+                <button id="btn-aba-login" class="ativo">Login</button>
+                <button id="btn-aba-cadastro">Cadastro</button>
+            </div>
+            
+            <!-- Formulário de Login -->
+            <form id="form-login">
+                <input type="email" id="login-email" placeholder="E-mail" required>
+                <input type="password" id="login-senha" placeholder="Senha" required>
+                <button type="submit">Entrar</button>
+            </form>
+
+            <!-- Formulário de Cadastro (Inicia escondido) -->
+            <form id="form-cadastro" class="escondido">
+                <input type="text" id="cad-nome" placeholder="Nome Completo" required>
+                <input type="email" id="cad-email" placeholder="E-mail" required>
+                <input type="password" id="cad-senha" placeholder="Senha" required>
+                <input type="text" id="cad-cpf" placeholder="CPF (apenas números)" required>
+                <input type="text" id="cad-endereco" placeholder="Endereço de Entrega" required>
+                <button type="submit">Cadastrar Conta</button>
+            </form>
+        </main>
+    </div>
+    <script src="auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab: Microsserviços Loja Virtual</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>🛒 Minha Loja Virtual</h1>
+        <div id="usuario-bar">
+            <span id="msg-usuario">Olá! Identifique-se para comprar</span>
+            <a href="auth.html" id="lnk-auth" class="btn-sm">Login / Cadastro</a>
+        </div>
+    </header>
+
+    <main class="container-loja">
+        <!-- SEÇÃO: VITRINE DE PRODUTOS -->
+        <section id="secao-catalogo" class="card">
+            <h2>📦 Vitrine de Produtos</h2>
+            <div id="lista-produtos" class="grid-produtos">
+                <p class="carregando">Aguardando conexão com o svc-catalogo...</p>
+            </div>
+        </section>
+
+        <!-- SEÇÃO: CARRINHO DE COMPRAS -->
+        <section id="secao-carrinho" class="card">
+            <h2>🛒 Seu Carrinho</h2>
+            <ul id="itens-carrinho">
+                <li class="vazio">Seu carrinho está vazio.</li>
+            </ul>
+            <div class="total">
+                <strong>Total: R$ <span id="valor-total-carrinho">0.00</span></strong>
+            </div>
+            <button id="btn-finalizar-compra" disabled>Finalizar Compra</button>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
