@@ -1,0 +1,107 @@
+openapi: "3.0.0"
+info:
+  title: "API de Usuários (svc-usuarios)"
+  description: "Contrato de endpoints para gerenciamento de clientes, cadastro e autenticação."
+  version: "1.0.0"
+
+paths:
+  /api/usuarios/cadastro:
+    post:
+      summary: "Cadastrar um novo usuário"
+      description: "Cria um novo cliente no sistema e salva as informações no banco usuarios.db com a senha criptografada."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nome
+                - email
+                - senha
+                - cpf
+                - endereco_entrega
+              properties:
+                nome:
+                  type: string
+                  example: "João Silva"
+                email:
+                  type: string
+                  example: "joao@email.com"
+                senha:
+                  type: string
+                  example: "senha123"
+                cpf:
+                  type: string
+                  example: "12345678901"
+                endereco_entrega:
+                  type: string
+                  example: "Rua das Flores, 123 - São Paulo/SP"
+      responses:
+        "201":
+          description: "Usuário cadastrado com sucesso (Created)."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  mensagem:
+                    type: string
+                    example: "Usuário criado com sucesso!"
+        "400":
+          description: "Requisição malformada (Bad Request). Erro de sintaxe no JSON enviado."
+        "422":
+          description: "Entidade improcessável (Unprocessable Entity). Dados com formato inválido (ex: e-mail inválido ou CPF incompleto)."
+        "409":
+          description: "Conflito (Conflict). O e-mail ou CPF informado já está cadastrado no sistema."
+        "500":
+          description: "Erro interno do servidor (Internal Server Error). Falha ao tentar acessar ou persistir os dados no banco SQLite."
+
+  /api/usuarios/login:
+    post:
+      summary: "Autenticar um usuário"
+      description: "Valida as credenciais do cliente e retorna seus dados de identificação para o fluxo de compra."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - senha
+              properties:
+                email:
+                  type: string
+                  example: "joao@email.com"
+                senha:
+                  type: string
+                  example: "senha123"
+      responses:
+        "200":
+          description: "Login efetuado com sucesso (OK)."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_usuario:
+                    type: integer
+                    example: 1
+                  nome:
+                    type: string
+                    example: "João Silva"
+                  mensagem:
+                    type: string
+                    example: "Autenticação bem-sucedida"
+        "400":
+          description: "Requisição malformada (Bad Request). Faltam campos obrigatórios no JSON."
+        "412":
+          description: "Pré-condição falhou (Precondition Failed). Conta bloqueada ou inativa."
+        "401":
+          description: "Não autorizado (Unauthorized). E-mail inexistente ou senha incorreta."
+        "500":
+          description: "Erro interno do servidor (Internal Server Error). Falha inesperada ao processar a autenticação."

@@ -1,0 +1,11 @@
+# Bancos de dados locais do SQLite
+*.db
+*.db-journal
+
+# Arquivos temporários e pastas do Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Variáveis de ambiente e segredos
+.env

@@ -1,0 +1,121 @@
+openapi: "3.0.0"
+info:
+  title: "API de Pedidos (svc-pedidos)"
+  description: "Contrato de endpoints para criação de ordens de compra e consulta de histórico."
+  version: "1.0.0"
+
+paths:
+  /api/pedidos:
+    post:
+      summary: "Criar um novo pedido (Fechar Compra)"
+      description: "Recebe os itens do carrinho, valida o usuário de forma síncrona com o svc-usuarios, salva o pedido no pedidos.db com status 'Aguardando Pagamento' e publica os dados na fila SQS do LocalStack."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id_usuario
+                - valor_total
+                - itens
+                - metodo_pagamento
+              properties:
+                id_usuario:
+                  type: integer
+                  example: 1
+                valor_total:
+                  type: float
+                  example: 349.80
+                metodo_pagamento:
+                  type: object
+                  required:
+                    - tipo
+                    - token_simulado
+                  properties:
+                    tipo:
+                      type: string
+                      example: "cartao_credito"
+                    token_simulado:
+                      type: string
+                      example: "tok_visa_12345"
+                itens:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - id_produto
+                      - quantidade
+                      - preco_unitario
+                    properties:
+                      id_produto:
+                        type: integer
+                        example: 101
+                      quantidade:
+                        type: integer
+                        example: 1
+                      preco_unitario:
+                        type: float
+                        example: 349.80
+      responses:
+        "201":
+          description: "Pedido criado e enviado para a fila de faturamento com sucesso (Created)."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_pedido:
+                    type: integer
+                    example: 5001
+                  status:
+                    type: string
+                    example: "Aguardando Pagamento"
+                  mensagem:
+                    type: string
+                    example: "Pedido recebido! Processando o faturamento."
+        "400":
+          description: "Requisição malformada (Bad Request). Estrutura do carrinho ou do JSON inválida."
+        "422":
+          description: "Entidade improcessável (Unprocessable Entity). Erro na validação de negócio (ex: o usuário informado não existe no svc-usuarios ou o produto está sem estoque)."
+        "500":
+          description: "Erro interno do servidor (Internal Server Error). Falha ao acessar o banco SQLite ou indisponibilidade ao publicar a mensagem no LocalStack SQS."
+
+  /api/pedidos/usuario/{id_usuario}:
+    get:
+      summary: "Listar histórico de pedidos do usuário"
+      description: "Retorna todas as ordens de compra efetuadas por um cliente específico."
+      parameters:
+        - name: "id_usuario"
+          in: "path"
+          required: true
+          description: "ID do usuário para o qual deseja buscar as compras"
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: "Histórico de pedidos localizado com sucesso (OK)."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id_pedido:
+                      type: integer
+                      example: 5001
+                    valor_total:
+                      type: float
+                      example: 349.80
+                    status:
+                      type: string
+                      example: "Aprovado"
+                    data_criacao:
+                      type: string
+                      example: "2026-10-03T14:10:00Z"
+        "404":
+          description: "Nenhum pedido encontrado para o usuário informado (Not Found)."
+        "500":
+          description: "Erro interno do servidor (Internal Server Error). Falha ao ler a tabela de pedidos."

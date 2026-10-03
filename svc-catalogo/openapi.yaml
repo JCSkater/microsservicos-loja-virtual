@@ -1,0 +1,86 @@
+openapi: "3.0.0"
+info:
+  title: "API de Catálogo (svc-catalogo)"
+  description: "Contrato de endpoints para gerenciamento e exibição da vitrine de produtos."
+  version: "1.0.0"
+
+paths:
+  /api/produtos:
+    get:
+      summary: "Listar todos os produtos"
+      description: "Retorna a lista completa de produtos disponíveis no banco catalogo.db para renderizar a vitrine."
+      responses:
+        "200":
+          description: "Lista de produtos retornada com sucesso (OK)."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 101
+                    nome:
+                      type: string
+                      example: "Teclado Mecânico RGB"
+                    descricao:
+                      type: string
+                      example: "Teclado mecânico com switches azuis e retroiluminação customizável."
+                    preco:
+                      type: float
+                      example: 299.90
+                    imagem_url:
+                      type: string
+                      example: "http://localhost/images/teclado.jpg"
+                    estoque:
+                      type: integer
+                      example: 15
+        "500":
+          description: "Erro interno do servidor (Internal Server Error). Falha ao ler a tabela de produtos no SQLite."
+
+  /api/produtos/{id}:
+    get:
+      summary: "Buscar detalhes de um produto"
+      description: "Retorna as informações detalhadas de um único produto com base no ID fornecido na URL."
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          description: "ID numérico do produto que deseja buscar"
+          schema:
+            type: integer
+            example: 101
+      responses:
+        "200":
+          description: "Produto localizado com sucesso (OK)."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 101
+                  nome:
+                    type: string
+                    example: "Teclado Mecânico RGB"
+                  descricao:
+                    type: string
+                    example: "Teclado mecânico com switches azuis e retroiluminação customizável."
+                  preco:
+                    type: float
+                    example: 299.90
+                  imagem_url:
+                    type: string
+                    example: "http://localhost/images/teclado.jpg"
+                  estoque:
+                    type: integer
+                    example: 15
+        "400":
+          description: "Requisição inválida (Bad Request). O ID fornecido não é um número válido."
+        "404":
+          description: "Produto não encontrado (Not Found). O ID informado não existe no banco de dados."
+        "500":
+          description: "Erro interno do servidor (Internal Server Error). Falha inesperada ao acessar o banco SQLite."
