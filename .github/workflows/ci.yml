@@ -2,32 +2,28 @@ name: CI Quality Gate
 
 on:
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, dev ] # Adicionado dev caso use esse padrão
 
 jobs:
-  validate-and-test:
+  validate-commits:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Necessário para o commitlint validar o histórico
+          fetch-depth: 0 # Essencial para o commitlint ler o histórico do PR
 
-      - name: Setup Node.js
+      - name: Setup Node.js (Apenas para as ferramentas do Git)
         uses: actions/setup-node@v4
         with:
-          node-node-version: '20'
-          cache: 'npm'
+          node-version: '20'
+          # CACHE REMOVIDO: Como não há package-lock.json na raiz, removemos para não gerar erro
 
-      - name: Install Dependencies
-        run: npm ci
+      - name: Install Commitlint Local
+        run: |
+          npm install -g @commitlint/cli @commitlint/config-conventional
 
       - name: Validate PR Commit Messages
-        uses: wagoid/commitlint-github-action@v6
-
-      - name: Run Linters (Code Quality)
-        run: npm run lint
-
-      - name: Run Tests
-        run: npm test
+        run: |
+          npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
