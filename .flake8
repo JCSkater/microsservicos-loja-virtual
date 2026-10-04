@@ -1,0 +1,27 @@
+[flake8]
+# Define o limite de caracteres por linha para 88.
+# É o padrão recomendado pela comunidade Python e pelo formatador 'Black'.
+max-line-length = 88
+
+# Mede a complexidade ciclomática do código. 
+# Valor 10 evita funções gigantescas e com excesso de 'if/else' aninhados (difíceis de testar).
+max-complexity = 10
+
+# Pastas e arquivos que o Flake8 deve ignorar completamente.
+# Crucial para não varrer ambientes virtuais, caches ou configurações de infraestrutura.
+exclude =
+    .git,
+    .github,
+    __pycache__,
+    venv,
+    .venv,
+    env,
+    .env,
+    build,
+    dist
+
+# Códigos de erros específicos que escolhemos ignorar para evitar conflitos inúteis:
+# E203, W503: Configurações necessárias para manter compatibilidade com o formatador Black.
+# E501: Deixa o aviso de linha longa apenas para casos extremos (já definimos 88 acima).
+# F401: Impede que a pipeline quebre por importações não utilizadas enquanto você desenvolve (opcional).
+ignore = E203, W503, E501, F401

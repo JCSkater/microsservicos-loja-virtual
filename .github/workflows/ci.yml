@@ -1,0 +1,42 @@
+name: CI Quality Gate
+
+on:
+  pull_request:
+    branches: [ main, develop, dev ]
+
+jobs:
+  # Job 1: Validação de Commits (Garante as boas práticas de histórico)
+  validate-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate PR Commit Messages
+        uses: wagoid/commitlint-github-action@v6
+
+  # Job 2: Validação do Código Python (Garante a qualidade do código dos microsserviços)
+  lint-python:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # Altere aqui para a versão do Python usada no seu projeto
+
+      - name: Install Linting Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+
+      - name: Run Flake8 (Code Quality)
+        run: |
+          # Interrompe a pipeline se houver erros graves de sintaxe
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Alerta sobre padrões de estilo (PEP 8) sem quebrar o build obrigatoriamente
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
