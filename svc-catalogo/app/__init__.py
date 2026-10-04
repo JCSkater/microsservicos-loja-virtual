@@ -1,6 +1,5 @@
 import os
 from flask import Flask
-from flask_cors import CORS
 from app.models import db
 
 def create_app():
@@ -17,8 +16,9 @@ def create_app():
     # Inicializa o banco de dados vinculando-o ao Flask
     db.init_app(app)
 
-    # Configuração de CORS restringindo o tráfego local
-    CORS(app, resources={r"/api/*": {"origins": ["http://localhost", "http://127.0.0.1"]}})
+    # =======================================================================
+    # NOTA APPSEC: CORS RE-REMOVIDO DAQUI. O API Gateway gerencia isso na borda.
+    # =======================================================================
 
     # ==========================================
     # REGISTRO DAS ROTAS (PADRÃO DE MERCADO)
