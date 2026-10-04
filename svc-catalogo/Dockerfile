@@ -22,5 +22,4 @@ USER appuser
 
 EXPOSE 5001
 
-# Execução com Gunicorn apontando para o seu arquivo principal (ex: app.py)
-CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "4", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "4", "wsgi:application"]
