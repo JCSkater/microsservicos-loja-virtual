@@ -21,9 +21,11 @@ def create_app():
     # Nota de AppSec: Como centralizamos o gerenciamento de CORS no Nginx Gateway,
     # não há necessidade de declarar flask_cors aqui. O gateway cuidará disso na borda.
 
-    # Aqui registraremos o Blueprint de rotas de autenticação futuramente
-    # from app.routes import usuarios_bp
-    # app.register_blueprint(usuarios_bp)
+    # =======================================================================
+    # REGISTRO DAS ROTAS DE AUTENTICAÇÃO (VINCULADO AO ROUTES.PY)
+    # =======================================================================
+    from app.routes import usuarios_bp
+    app.register_blueprint(usuarios_bp)
 
     # Rota de Health Check para monitoramento e DevOps SRE
     @app.route("/health", methods=["GET"])
