@@ -66,12 +66,9 @@ def login_usuario():
 
         # AppSec: Se o usuário não existir OU a senha estiver errada,
         # retornamos a MESMA mensagem genérica 401 (Não Autorizado).
-        # Se dissermos "Senha incorreta", um atacante saberá que o email existe no banco.
         if not usuario or not usuario.check_senha(senha):
             return jsonify({"erro": "Credenciais inválidas. Verifique seu e-mail e/ou senha."}), 401
 
-        # Autenticação Funcional Simplificada para o Lab
-        # Em produção, aqui geraríamos um JWT (JSON Web Token) assinado.
         return jsonify({
             "mensagem": "Autenticação bem-sucedida!",
             "usuario": usuario.to_dict() # Retorna o dicionário sem o hash da senha
@@ -79,3 +76,24 @@ def login_usuario():
 
     except Exception as e:
         return jsonify({"erro": "Falha interna ao processar o login."}), 500
+
+
+# --- NOVA ROTA ADICIONADA PARA INTEGRAÇÃO SÍNCRONA COM SVC-PEDIDOS ---
+@usuarios_bp.route('/usuarios/<int:id_usuario>', methods=['GET'])
+def buscar_usuario_por_id(id_usuario):
+    """
+    Endpoint para consulta síncrona interna de perfil de cliente.
+    Utilizado por outros microsserviços (como svc-pedidos) para checar existência de contas.
+    """
+    try:
+        usuario = Usuario.query.get(id_usuario)
+        
+        # Caso o ID do usuário não conste no banco SQLite, retorna HTTP 404
+        if not usuario:
+            return jsonify({"erro": f"Usuário com ID {id_usuario} não localizado no sistema."}), 404
+            
+        # Retorna os dados higienizados (sem hash de senha) em caso de sucesso
+        return jsonify(usuario.to_dict()), 200
+
+    except Exception as e:
+        return jsonify({"erro": "Falha interna ao buscar os dados do usuário."}), 500
