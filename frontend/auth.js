@@ -35,7 +35,7 @@ formCadastro.addEventListener('submit', (event) => {
     };
 
     // Dispara a requisição POST para a porta do nosso API Gateway (Nginx)
-    fetch('http://127.0.0', {
+    fetch('http://127.0.0.1:8080/api/register', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -73,7 +73,7 @@ formLogin.addEventListener('submit', (event) => {
         senha: document.getElementById('login-senha').value
     };
 
-    fetch('http://127.0.0', {
+    fetch('http://127.0.0.1:8080/api/login', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
