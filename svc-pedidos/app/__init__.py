@@ -1,74 +1,114 @@
 from flask import Flask, request, jsonify
+import requests  # Biblioteca para chamadas HTTP síncronas
 from app.models import db, Pedido, ItemPedido
 
 def create_app():
     app = Flask(__name__)
     
-    # Configuração do banco de dados SQLite local
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../pedidos.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     db.init_app(app)
 
-    # Cria as tabelas caso não existam
     with app.app_context():
         db.create_all()
 
-    # Rota: Criar um novo pedido
-    @app.route('/pedidos', methods=['POST'])
+    # URL interna do serviço de usuários dentro da rede Docker (ou localhost para testes locais)
+    # Em produção/Docker Compose, o nome do serviço substitui o IP/localhost
+    USUARIOS_SERVICE_URL = "http://svc-usuarios:5001/api/usuarios"
+
+    # Rota POST: Criar um novo pedido (Fechar Compra)
+    @app.route('/api/pedidos', methods=['POST'])
     def criar_pedido():
         dados = request.get_json()
         
-        if not dados or 'usuario_id' not in dados or 'itens' not in dados:
-            return jsonify({'erro': 'Dados incompletos'}), 400
+        # Validação básica de campos obrigatórios conforme o openapi.yaml (Sintaxe Corrigida)
+        campos_obrigatorios = ['id_usuario', 'valor_total', 'metodo_pagamento', 'itens']
+        if not dados or not all(campo in dados for campo in campos_obrigatorios):
+            return jsonify({'erro': 'Requisição malformada. Campos obrigatórios ausentes.'}), 400
             
+        id_usuario = dados['id_usuario']
+        
+        # --- VALIDAÇÃO SÍNCRONA VIA HTTP (svc-usuarios) ---
         try:
-            novo_pedido = Pedido(usuario_id=dados['usuario_id'], total=0.0)
-            db.session.add(novo_pedido)
-            db.session.flush() # Gera o ID do pedido antes do commit definitivo
+            url_validacao = f"{USUARIOS_SERVICE_URL}/{id_usuario}"
+            resposta_usuarios = requests.get(url_validacao, timeout=3.0)
             
-            valor_total = 0.0
-            for item in dados['itens']:
-                subtotal = item['quantidade'] * item['preco_unitario']
-                valor_total += subtotal
+            # Se o serviço de usuários responder 404, o usuário não existe
+            if resposta_usuarios.status_code == 404:
+                return jsonify({
+                    'erro': f'Entidade improcessável. Usuário com ID {id_usuario} não localizado no sistema.'
+                }), 422
                 
+            # Se responder qualquer outro erro diferente de 200 OK
+            if resposta_usuarios.status_code != 200:
+                return jsonify({
+                    'erro': 'Não foi possível validar o usuário no momento. Resposta inválida do serviço de autenticação.'
+                }), 502
+                
+        except requests.exceptions.RequestException as e:
+            # Falha de rede, timeout ou serviço svc-usuarios fora do ar
+            return jsonify({
+                'erro': 'Erro interno do servidor. Falha de comunicação síncrona com svc-usuarios.',
+                'detalhes': str(e)
+            }), 500
+        # --------------------------------------------------
+
+        try:
+            valor_total = dados['valor_total']
+            metodo = dados['metodo_pagamento']
+            
+            novo_pedido = Pedido(
+                id_usuario=id_usuario,
+                valor_total=valor_total,
+                status='Aguardando Pagamento',
+                metodo_pagamento_tipo=metodo.get('tipo', 'cartao_credito'),
+                token_simulado=metodo.get('token_simulado', '')
+            )
+            db.session.add(novo_pedido)
+            db.session.flush()  # Descobre o id_pedido gerado automaticamente
+            
+            for item in dados['itens']:
                 novo_item = ItemPedido(
-                    pedido_id=novo_pedido.id,
-                    produto_id=item['produto_id'],
+                    id_pedido=novo_pedido.id_pedido,
+                    id_produto=item['id_produto'],
                     quantidade=item['quantidade'],
                     preco_unitario=item['preco_unitario']
                 )
                 db.session.add(novo_item)
             
-            novo_pedido.total = valor_total
             db.session.commit()
             
-            return jsonify({'mensagem': 'Pedido criado com sucesso', 'pedido_id': novo_pedido.id}), 210
+            # [TODO] Chamar a lógica de queue.py aqui para publicar no SQS do LocalStack
+            # publicar_no_sqs(novo_pedido)
+            
+            return jsonify({
+                'id_pedido': novo_pedido.id_pedido,
+                'status': novo_pedido.status,
+                'mensagem': 'Pedido recebido! Processando o faturamento.'
+            }), 201
             
         except Exception as e:
             db.session.rollback()
-            return jsonify({'erro': str(e)}), 500
+            return jsonify({'erro': 'Erro interno do servidor', 'detalhes': str(e)}), 500
 
-    # Rota: Listar todos os pedidos
-    @app.route('/pedidos', methods=['GET'])
-    def listar_pedidos():
-        pedidos = Pedido.query.all()
+    # Rota GET: Histórico de pedidos por usuário
+    @app.route('/api/pedidos/usuario/<int:id_usuario>', methods=['GET'])
+    def listar_pedidos_por_usuario(id_usuario):
+        pedidos = Pedido.query.filter_by(id_usuario=id_usuario).all()
+        
+        if not pedidos:
+            return jsonify({'erro': 'Nenhum pedido encontrado para o usuário informado.'}), 404
+            
         resultado = []
         for p in pedidos:
-            itens_lista = [{
-                'produto_id': i.produto_id,
-                'quantidade': i.quantidade,
-                'preco_unitario': i.preco_unitario
-            } for i in p.itens]
-            
             resultado.append({
-                'id': p.id,
-                'usuario_id': p.usuario_id,
+                'id_pedido': p.id_pedido,
+                'valor_total': p.valor_total,
                 'status': p.status,
-                'total': p.total,
-                'criado_em': p.criado_em.strftime('%Y-%m-%d %H:%M:%S'),
-                'itens': itens_lista
+                'data_criacao': p.data_criacao.strftime('%Y-%m-%dT%H:%M:%SZ')
             })
+            
         return jsonify(resultado), 200
 
     return app
